@@ -2,7 +2,8 @@ import pyglet
 from pyglet.window import key
 from pyglet.window import mouse
 import data
-from cube import cube, sphere
+from cube import cube, sphere, donut
+from utilsmath import pi
 
 window = pyglet.window.Window()
 
@@ -12,6 +13,7 @@ Batch = pyglet.graphics.Batch()
 
 cube1 = cube(Batch)
 #sphere1 = sphere(Batch)
+#donut1 = donut(Batch)
 
 # region toggle
 @window.event
@@ -37,6 +39,8 @@ def on_draw():
 def update(dt):
     cube1.update()
     #sphere1.update()
+    #donut1.update()
+    pass
 
-pyglet.clock.schedule_interval(update, 1/60)
+pyglet.clock.schedule_interval(update, 1/20)
 pyglet.app.run()

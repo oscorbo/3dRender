@@ -2,6 +2,7 @@
 from utilsmath import *
 from utils import *
 import data
+import math
 
 # refact core
 
@@ -96,7 +97,7 @@ class cube():
             ] 
 
             projected2D = matrix_multiply2d(projection_orthogonal, rotated.matrix)
-            vertex_.update_tiny(projected2D)
+            vertex_.update(projected2D)
             # debug : vertex_.position = rotated
             vertex_.position = projected2D
             vertex_.position_no_perspective = rotated
@@ -160,7 +161,7 @@ class sphere():
             ] 
             
             projected2D = matrix_multiply2d(projection_orthogonal, rotated.matrix)
-            vertex_.update_tiny(projected2D)
+            vertex_.update(projected2D)
             vertex_.position = rotated
 
 
@@ -169,3 +170,71 @@ class sphere():
         
         for face in self.faces:
             face.update()
+
+
+class donut():
+    size = 200
+    # pi radians | make this private
+    angle = 0
+    def __init__(self, batch) -> None:
+        self.batch = batch
+
+        self.vertexs_faces = [ ]
+        
+        radius_inside = .5
+        radius_outside = .3
+
+        oring = 0
+        while oring < 2*pi + pi / 8:
+
+            xi = sin(oring) * radius_inside
+            zi = cos(oring) * radius_inside
+
+            angle_phase2 = 0
+
+            offset = vertex(vector(xi, 0, zi), self)
+            offset.circle.opacity = 0
+            self.vertexs_faces.append(offset)
+
+            while angle_phase2 < 2 * pi:
+                y = cos(angle_phase2) * radius_outside
+                x = sin(angle_phase2) * radius_outside
+                actual_position = vector(x, y, 0)
+                # oring * -2 | oring / 2 | pi*1.5
+                # im done with maths >:vvv
+                actual_position = matrix_multiply2d(rotate_y(oring + pi / 2), actual_position.matrix)
+                actual_position.add(vector(xi,0,zi))
+
+                self.vertexs_faces.append(vertex_face(actual_position, offset, self))
+
+                angle_phase2 += pi / 6
+            
+            oring += pi / 6
+
+
+    def update(self):
+        self.angle = .03
+
+        for vertex_ in self.vertexs_faces:
+            rotated = vector(vertex_.position.x, vertex_.position.y, vertex_.position.z)
+
+            rotated = matrix_multiply2d(rotate_y(self.angle + .02), rotated.matrix)
+            rotated = matrix_multiply2d(rotate_x(self.angle), rotated.matrix)
+            rotated = matrix_multiply2d(rotate_z(self.angle), rotated.matrix)
+            
+            distance = 2
+            perspective_value = 1 / (distance - (rotated.z / self.size))
+            projection_orthogonal = [
+                [perspective_value, 0, 0],
+                [0, perspective_value, 0], 
+                [0, 0, perspective_value] 
+            ] 
+            
+            projected2D = matrix_multiply2d(projection_orthogonal_general, rotated.matrix)
+
+            try:
+                vertex_.update(projected2D)
+            except:
+                vertex_.update()
+
+            vertex_.position = rotated

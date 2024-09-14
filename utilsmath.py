@@ -48,16 +48,54 @@ class vertex():
     def __init__(self, position: vector, shape) -> None:
         self.ishide = False
         self.position_no_perspective = vector(position.x * shape.size, position.y * shape.size, position.z * shape.size, )
-        self.position = vector(position.x * shape.size, position.y * shape.size, position.z * shape.size, )
+        self.position = self.position_no_perspective.clone()
 
         self.shape = shape
         self.circle = shapes.Circle(
             x=position.x + data.center_x, 
             y=position.y + data.center_y,
             radius=2, color=(255,255,255), batch=shape.batch)
-    def update_tiny(self, vect):
+    def update(self, vect):
         self.circle.x = (vect.x) + data.center_x
         self.circle.y = (vect.y) + data.center_y
+
+class vertex_face():
+    def __init__(self, position: vector, offset: vertex, shape) -> None:
+        self.shape = shape
+        self.offset = offset
+        self.position_no_perspective = vector(position.x * shape.size, position.y * shape.size, position.z * shape.size, )
+        self.position = self.position_no_perspective.clone()
+
+        self.vertex_circle = shapes.Circle(
+            x=position.x + data.center_x, 
+            y=position.y + data.center_y,
+            radius=2, color=(255,255,255), batch=shape.batch)
+        
+        ## lightninh alm no c como c escribe
+        
+        self.normal = vector()
+        # :D
+        
+        
+    def update(self):
+        
+        self.normal = vector(
+            self.position.x - self.offset.position.x, 
+            self.position.y - self.offset.position.y, 
+            self.position.z - self.offset.position.z, )
+        self.normal.normalize()
+
+        dot_product = self.normal.dot_product(projection_direction) * 8
+
+        dot_product = self.normal.dot_product(projection_direction) * 8
+        if dot_product < 0: 
+            self.vertex_circle.opacity = 0
+        else:
+            self.vertex_circle.opacity = data.ligth_values[int(dot_product)]
+
+        self.vertex_circle.x = (self.position.x) + data.center_x
+        self.vertex_circle.y = (self.position.y) + data.center_y
+        
 
 class edge():
     def __init__(self, vertex1i: vertex, vertex2i: vertex, batch) -> None:
@@ -111,8 +149,8 @@ class face():
             height=100, width=100, color=(100,255,100), batch=batch)
         
         self.normal_line = shapes.Line(
-            x=self.center_face.x, x2=0,
-            y=self.center_face.y, y2=0,
+            x=0, x2=0,
+            y=0, y2=0,
             #width=2, 
             color=(100,255,100), batch=batch)
         # self.normal.sub(vector(data.center_x, data.center_y, self.middle_point.z))
@@ -168,16 +206,12 @@ class face():
         
 
 def middle_point_and_divide(vertexs, divide):
-    x = 0
+    tempv = vector()
     for vertex_ in vertexs:
-        x += vertex_.position.x
-    y = 0
-    for vertex_ in vertexs:
-        y += vertex_.position.y
-    z = 0
-    for vertex_ in vertexs:
-        z += vertex_.position.z
-    return vector(x / divide, y / divide, z / divide)
+        tempv.add(vector(vertex_.position.x, vertex_.position.y, vertex_.position.z))
+    tempv.divide(divide)
+        
+    return tempv
 
 def connectEdges(vertexs, vertex1, vertex2, batch):
     return edge(vertexs[vertex1], vertexs[vertex2], batch)
